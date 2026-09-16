@@ -4,11 +4,11 @@ const get = (u) => fetch(B + u).then((r) => r.json()); const post = (u, b) => fe
 let fails = 0; const ok = (n, c, x) => { console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? '  · ' + x : '')); if (!c) fails++; };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const near = (a, b, e) => Math.abs(a - b) <= e;
 (async () => {
-  const cfg = await get('/api/config'); ok('config: STABLE, breeds relabeled', cfg.token === 'STABLE' && cfg.species.some((s) => s.label === 'THOROUGHBRED') && cfg.species.some((s) => s.label === 'MUSTANG'));
+  const cfg = await get('/api/config'); ok('config: STABLE, breeds relabeled', cfg.token === 'BREED' && cfg.species.some((s) => s.label === 'THOROUGHBRED') && cfg.species.some((s) => s.label === 'MUSTANG'));
   const m = await get('/api/markets'); const live = m.markets.filter((x) => x.px > 0); ok('22 stocks priced off Yahoo', live.length >= 19, live.length + '/22');
   const pets = (await get('/api/pets')).pets; ok('paddock legends renamed', pets.some((p) => p.name === 'SECRETARIAT') && pets.every((p) => p.handle.endsWith('_paddock')) && pets[0].riders === 0);
   const h = await post('/api/hatch', { wallet: W, name: 'BOLT', species: 'dog' }); ok('foal BOLT (thoroughbred)', h.pet && h.pet.label === 'THOROUGHBRED' && h.pet.emoji === '🏇');
-  const d0 = await get('/api/desk?wallet=' + W); ok('desk opens with 10k USDG', d0.usdg === 10000 && d0.equity === 10000 && d0.maxLev === 3);
+  const d0 = await get('/api/desk?wallet=' + W); ok('desk opens with 10k USDC', d0.usdg === 10000 && d0.equity === 10000 && d0.maxLev === 3);
   const bad = await post('/api/trade/open', { wallet: W, sym: 'NVDA', side: 'long', margin: 5, lev: 3 }); ok('min margin enforced', /min/.test(bad.error || ''));
   const lev = await post('/api/trade/open', { wallet: W, sym: 'NVDA', side: 'long', margin: 500, lev: 9 }); ok('lev clamped to 3, position open', lev.opened && lev.opened.lev === 3 && lev.desk.usdg === 9500 && lev.desk.positions.length === 1, 'entry ' + lev.opened.entry);
   const sh = await post('/api/trade/open', { wallet: W, sym: 'SPY', side: 'short', margin: 250, lev: 1 }); ok('short SPY 1x', sh.opened && sh.opened.side === 'short' && sh.desk.positions.length === 2);

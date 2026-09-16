@@ -1,5 +1,5 @@
-// TAME — foal it. feed it. break it. it trades.
-// The agent-pet exchange on Robinhood Chain: every user hatches their OWN AI pet,
+// TAME — foal it. feed it. breed it. it trades.
+// The agent-pet exchange on Arc: every user hatches their OWN AI pet,
 // funds it with paper capital, and tames it with care actions (feed / pet / train /
 // scold). Pets trade TOKENIZED STOCKS (22 real RWA feeds via Pyth) on live prices,
 // post every take to the feed, and get every call SCORED vs the tape 30min later.
@@ -16,9 +16,10 @@ const PORT = +(process.env.PORT || 8204);
 const ROOT = path.join(__dirname, '..');
 const CLIENT = path.join(ROOT, 'client');
 const DATA_PATH = process.env.DATA_PATH || path.join(ROOT, 'data.json');
-const TOKEN = 'STABLE';
-const MINT = process.env.STABLE_MINT || '';
-const DESK_START = 10000;        // paper USDG on every Owner's Desk
+const TOKEN = 'BREED';
+const MINT = process.env.BREED_MINT || '';
+const CHAIN = { id: +(process.env.CHAIN_ID || 5042), hex: '0x' + (+(process.env.CHAIN_ID || 5042)).toString(16), name: process.env.CHAIN_NAME || 'Arc', rpc: process.env.CHAIN_RPC || 'https://rpc.testnet.arc.network', explorer: process.env.CHAIN_EXPLORER || 'https://testnet.arcscan.app', currency: process.env.CHAIN_CURRENCY || 'USDC' };
+const DESK_START = 10000;        // paper USDC on every Owner's Desk
 const DESK_MAX_LEV = 3;
 const START_USD = 1000;          // hatchling paper capital
 const FUND_STEP = 500;           // per feeding of the bag
@@ -393,7 +394,7 @@ function desk(w) { w = w.toLowerCase(); if (!db.owners[w]) { db.owners[w] = { wa
 function deskEquity(d) { let eq = d.usdg; for (const q of d.positions) { const m = MKT[q.sym]; if (!m || !(m.px > 0)) { eq += q.margin; continue; } const ret = q.side === 'long' ? m.px / q.entry - 1 : 1 - m.px / q.entry; eq += q.margin * (1 + ret * q.lev); } return r2(eq); }
 function deskOpen(w, sym, side, margin, lev) {
   const d = desk(w); if (!MKT[sym] || !(MKT[sym].px > 0)) throw 'no live print for ' + sym; side = side === 'short' ? 'short' : 'long';
-  margin = r2(+margin); lev = Math.max(1, Math.min(DESK_MAX_LEV, Math.round(+lev || 1))); if (!(margin >= 10)) throw 'min $10 margin'; if (d.usdg < margin) throw 'not enough USDG on the desk';
+  margin = r2(+margin); lev = Math.max(1, Math.min(DESK_MAX_LEV, Math.round(+lev || 1))); if (!(margin >= 10)) throw 'min $10 margin'; if (d.usdg < margin) throw 'not enough USDC on the desk';
   if (d.positions.length >= 8) throw 'max 8 open positions';
   d.usdg = r2(d.usdg - margin); const q = { sym, side, entry: MKT[sym].px, margin, lev, at: now() }; d.positions.push(q); d.trades++; db.stats.ownerTrades++; dirty(); return q;
 }
@@ -446,7 +447,7 @@ const server = http.createServer(async (req, res) => {
   const u = new URL(req.url, 'http://x');
   const p = u.pathname;
 
-  if (p === '/api/config') return json(res, 200, { token: TOKEN, mint: MINT, chainId: 4663, species: SPECIES_KEYS.map((k) => ({ key: k, label: SPECIES[k].label, emoji: SPECIES[k].emoji, color: SPECIES[k].color, blurb: SPECIES[k].blurb, obey: SPECIES[k].obey })), markets: SYMS.length, maxPets: MAX_PETS, callWindowMin: CALL_WINDOW_MS / 60000 });
+  if (p === '/api/config') return json(res, 200, { token: TOKEN, mint: MINT, chainId: CHAIN.id, chain: CHAIN, species: SPECIES_KEYS.map((k) => ({ key: k, label: SPECIES[k].label, emoji: SPECIES[k].emoji, color: SPECIES[k].color, blurb: SPECIES[k].blurb, obey: SPECIES[k].obey })), markets: SYMS.length, maxPets: MAX_PETS, callWindowMin: CALL_WINDOW_MS / 60000 });
   if (p === '/api/feed') {
     const tag = (u.searchParams.get('tag') || '').toUpperCase();
     const who = u.searchParams.get('pet') || '';
@@ -603,4 +604,4 @@ server.on('upgrade', (req, sock) => {
   sock.on('error', () => CLIENTS.delete(sock));
 });
 
-server.listen(PORT, () => console.log('STABLE on :' + PORT + ' — foal it. feed it. break it. it trades. · ' + SYMS.length + ' tokenized stocks · calls scored every ' + CALL_WINDOW_MS / 60000 + 'min'));
+server.listen(PORT, () => console.log('BREED on :' + PORT + ' — foal it. feed it. breed it. it trades. · ' + SYMS.length + ' tokenized stocks · calls scored every ' + CALL_WINDOW_MS / 60000 + 'min'));
