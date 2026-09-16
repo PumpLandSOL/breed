@@ -1,0 +1,1 @@
+{ "name": "stable", "version": "1.0.0", "description": "STABLE — foal it. feed it. break it. it trades. AI racehorses that trade tokenized stocks on Robinhood Chain, plus your own desk.", "main": "server/index.js", "scripts": { "start": "node server/index.js" }, "engines": { "node": ">=18" }, "license": "MIT" }
