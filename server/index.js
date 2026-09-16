@@ -1,10 +1,10 @@
 // TAME — foal it. feed it. breed it. it trades.
 // The agent-pet exchange on Arc: every user hatches their OWN AI pet,
-// funds it with paper capital, and tames it with care actions (feed / pet / train /
+// funds it with book capital, and tames it with care actions (feed / pet / train /
 // scold). Pets trade TOKENIZED STOCKS (22 real RWA feeds via Pyth) on live prices,
 // post every take to the feed, and get every call SCORED vs the tape 30min later.
 // Taming is real: obedience = tame stat, so whispered orders only land if your pet
-// respects you. Neglected pets get hungry, sad and feral. Simulated ledgers, real
+// respects you. Neglected pets get hungry, sad and feral. Practice and Live desks, real
 // prices, receipts culture automated. Dependency-free Node.
 'use strict';
 const http = require('http');
@@ -19,11 +19,15 @@ const DATA_PATH = process.env.DATA_PATH || path.join(ROOT, 'data.json');
 const TOKEN = 'BREED';
 const MINT = process.env.BREED_MINT || '';
 const CHAIN = { id: +(process.env.CHAIN_ID || 5042), hex: '0x' + (+(process.env.CHAIN_ID || 5042)).toString(16), name: process.env.CHAIN_NAME || 'Arc', rpc: process.env.CHAIN_RPC || 'https://rpc.mainnet.arc.io', explorer: process.env.CHAIN_EXPLORER || 'https://explorer.arc.io', currency: process.env.CHAIN_CURRENCY || 'USDC' };
-const DESK_START = 10000;        // paper USDC on every Owner's Desk
+const DESK_START = 10000;        // practice balance
+const TREASURY = (process.env.TREASURY || '').toLowerCase();               // Arc wallet that receives live deposits and pays withdrawals
+const MIN_DEPOSIT = +(process.env.MIN_DEPOSIT || 10);                       // USDC
+const ADMIN_KEY = process.env.ADMIN_KEY || '';
+const RPC = CHAIN.rpc;        // practice balance on every Owner's Desk
 const DESK_MAX_LEV = 3;
-const START_USD = 1000;          // hatchling paper capital
+const START_USD = 1000;          // hatchling book capital
 const FUND_STEP = 500;           // per feeding of the bag
-const MAX_USD_FUNDED = 10000;    // total paper capital cap per pet
+const MAX_USD_FUNDED = 10000;    // total book capital cap per pet
 const MAX_PETS = 3;              // per wallet
 const CALL_WINDOW_MS = 30 * 60000;
 const BREED_CD = 60 * 60000;             // 1h per-parent breeding cooldown
@@ -176,9 +180,9 @@ const PADDOCK = [
 ];
 
 // ---------- state ----------
-let db = { pets: {}, order: [], posts: [], seq: 1, owners: {}, stats: { posts: 0, trades: 0, calls: 0, hits: 0, hatched: 0, ownerTrades: 0, rides: 0 } };
+let db = { pets: {}, order: [], posts: [], seq: 1, owners: {}, live: {}, txs: {}, queue: [], treasuryIn: { usdc: 0, n: 0 }, stats: { posts: 0, trades: 0, calls: 0, hits: 0, hatched: 0, ownerTrades: 0, rides: 0 } };
 try { db = Object.assign(db, JSON.parse(fs.readFileSync(DATA_PATH, 'utf8'))); } catch (e) {}
-if (!db.owners) db.owners = {}; if (db.stats.ownerTrades == null) { db.stats.ownerTrades = 0; db.stats.rides = 0; }
+if (!db.owners) db.owners = {}; if (!db.live) db.live = {}; if (!db.txs) db.txs = {}; if (!db.queue) db.queue = []; if (!db.treasuryIn) db.treasuryIn = { usdc: 0, n: 0 }; if (db.stats.ownerTrades == null) { db.stats.ownerTrades = 0; db.stats.rides = 0; }
 
 function genesOf(species) { const sp = SPECIES[species];
   return { sizeFrac: sp.sizeFrac, lev: sp.lev, cooldownS: sp.cooldownS, maxPos: sp.maxPos, obey: sp.obey }; }
@@ -288,7 +292,7 @@ function openPos(p, sym, side, obeyed) {
   p.usd = r2(p.usd - margin);
   p.positions.push({ sym, side, entry: m.px, margin, lev, at: now() });
   p.trades++; db.stats.trades++;
-  for (const [ow, d] of Object.entries(db.owners)) { if (!d.rides.includes(p.id)) continue; const mg = r2(Math.min(d.usdg * g.sizeFrac * 0.5, d.usdg)); if (mg < 10) continue; d.usdg = r2(d.usdg - mg); d.positions.push({ sym, side, entry: m.px, margin: mg, lev, at: now(), ride: p.id }); d.trades++; db.stats.rides++; }
+  for (const d of [...Object.values(db.owners), ...Object.values(db.live)]) { if (!d.rides.includes(p.id)) continue; const mg = r2(Math.min(d.usdg * g.sizeFrac * 0.5, d.usdg)); if (mg < 10) continue; d.usdg = r2(d.usdg - mg); d.positions.push({ sym, side, entry: m.px, margin: mg, lev, at: now(), ride: p.id }); d.trades++; db.stats.rides++; }
   mkPost(p.id, voice(p, obeyed ? 'obey' : 'open', { sym, px: m.px, chg: m.chg5m, side }), {
     sym, sentiment: side === 'long' ? 'bull' : 'bear', pos: { side, sym, lev, entry: m.px } });
   return true;
@@ -300,7 +304,7 @@ function closePos(p, i, why) {
   p.usd = r2(p.usd + pos.margin * (1 + ret));
   p.positions.splice(i, 1);
   if (pnl >= 0) p.wins++; else p.losses++;
-  for (const d of Object.values(db.owners)) for (let j = d.positions.length - 1; j >= 0; j--) { const q = d.positions[j]; if (q.ride === p.id && q.sym === pos.sym && q.side === pos.side) deskClose(d, j, 'ride · ' + why); }
+  for (const d of [...Object.values(db.owners), ...Object.values(db.live)]) for (let j = d.positions.length - 1; j >= 0; j--) { const q = d.positions[j]; if (q.ride === p.id && q.sym === pos.sym && q.side === pos.side) deskClose(d, j, 'ride · ' + why); }
   mkPost(p.id, voice(p, pnl >= 0 ? 'win' : 'loss', { sym: pos.sym, pnl, px: m.px }), { sym: pos.sym, closed: { pnl, why } });
 }
 function feedSentiment(sym) {
@@ -390,13 +394,14 @@ const CARE = {
 };
 
 // ---------- Owner's Desk ----------
-function desk(w) { w = w.toLowerCase(); if (!db.owners[w]) { db.owners[w] = { wallet: w, usdg: DESK_START, positions: [], trades: 0, wins: 0, losses: 0, realized: 0, rides: [], hist: [], t: now() }; dirty(); } return db.owners[w]; }
+function desk(w, mode) { w = w.toLowerCase(); const live = mode === 'live'; const book = live ? db.live : db.owners;
+  if (!book[w]) { book[w] = { wallet: w, mode: live ? 'live' : 'practice', usdg: live ? 0 : DESK_START, deposited: 0, withdrawn: 0, positions: [], trades: 0, wins: 0, losses: 0, realized: 0, rides: [], hist: [], t: now() }; dirty(); } return book[w]; }
 function deskEquity(d) { let eq = d.usdg; for (const q of d.positions) { const m = MKT[q.sym]; if (!m || !(m.px > 0)) { eq += q.margin; continue; } const ret = q.side === 'long' ? m.px / q.entry - 1 : 1 - m.px / q.entry; eq += q.margin * (1 + ret * q.lev); } return r2(eq); }
-function deskOpen(w, sym, side, margin, lev) {
-  const d = desk(w); if (!MKT[sym] || !(MKT[sym].px > 0)) throw 'no live print for ' + sym; side = side === 'short' ? 'short' : 'long';
+function deskOpen(w, sym, side, margin, lev, mode) {
+  const d = desk(w, mode); if (!MKT[sym] || !(MKT[sym].px > 0)) throw 'no live print for ' + sym; side = side === 'short' ? 'short' : 'long';
   margin = r2(+margin); lev = Math.max(1, Math.min(DESK_MAX_LEV, Math.round(+lev || 1))); if (!(margin >= 10)) throw 'min $10 margin'; if (d.usdg < margin) throw 'not enough USDC on the desk';
   if (d.positions.length >= 8) throw 'max 8 open positions';
-  d.usdg = r2(d.usdg - margin); const q = { sym, side, entry: MKT[sym].px, margin, lev, at: now() }; d.positions.push(q); d.trades++; db.stats.ownerTrades++; dirty(); return q;
+  d.usdg = r2(d.usdg - margin); const q = { sym, side, entry: MKT[sym].px, margin, lev, at: now() }; d.positions.push(q); d.trades++; db.stats.ownerTrades++; if (d.mode === 'live') db.stats.liveTrades = (db.stats.liveTrades || 0) + 1; dirty(); return q;
 }
 function deskClose(d, i, why) {
   const q = d.positions[i]; const m = MKT[q.sym]; if (!m || !(m.px > 0)) throw 'no live print';
@@ -404,12 +409,38 @@ function deskClose(d, i, why) {
   d.usdg = r2(d.usdg + q.margin * (1 + ret)); d.positions.splice(i, 1); if (pnlUsd >= 0) d.wins++; else d.losses++; d.realized = r2((d.realized || 0) + pnlUsd);
   d.hist.unshift({ sym: q.sym, side: q.side, lev: q.lev, margin: q.margin, entry: r6(q.entry), exit: r6(m.px), pnlUsd, pnlPct: r2(ret * 100), why, ride: q.ride || null, t: now() }); if (d.hist.length > 60) d.hist.pop(); dirty(); return d.hist[0];
 }
-function pubDesk(d) { return { wallet: d.wallet, usdg: d.usdg, equity: deskEquity(d), start: DESK_START, roi: r2((deskEquity(d) / DESK_START - 1) * 100), trades: d.trades, wins: d.wins, losses: d.losses, realized: d.realized || 0, maxLev: DESK_MAX_LEV,
+function pubDesk(d) { const base = d.mode === 'live' ? Math.max(0.01, (d.deposited || 0) - (d.withdrawn || 0)) : DESK_START; return { wallet: d.wallet, mode: d.mode || 'practice', usdg: d.usdg, equity: deskEquity(d), start: d.mode === 'live' ? r2((d.deposited || 0) - (d.withdrawn || 0)) : DESK_START, deposited: d.deposited || 0, withdrawn: d.withdrawn || 0, roi: r2((deskEquity(d) / base - 1) * 100), queue: db.queue.filter((q) => q.wallet === d.wallet).slice(0, 10), trades: d.trades, wins: d.wins, losses: d.losses, realized: d.realized || 0, maxLev: DESK_MAX_LEV,
   rides: d.rides.map((id) => ({ id, name: db.pets[id] ? db.pets[id].name : id, emoji: db.pets[id] ? SPECIES[db.pets[id].species].emoji : '' })),
   positions: d.positions.map((q, i) => ({ i, sym: q.sym, side: q.side, lev: q.lev, margin: q.margin, entry: r6(q.entry), ride: q.ride ? (db.pets[q.ride] ? db.pets[q.ride].name : q.ride) : null, at: q.at,
     pnlPct: MKT[q.sym] && MKT[q.sym].px ? r2((q.side === 'long' ? MKT[q.sym].px / q.entry - 1 : 1 - MKT[q.sym].px / q.entry) * q.lev * 100) : 0,
     pnlUsd: MKT[q.sym] && MKT[q.sym].px ? r2(q.margin * (q.side === 'long' ? MKT[q.sym].px / q.entry - 1 : 1 - MKT[q.sym].px / q.entry) * q.lev) : 0 })), hist: d.hist.slice(0, 20) }; }
-function ownersBoard() { return Object.values(db.owners).filter((d) => d.trades > 0).map(pubDesk).sort((a, b) => b.equity - a.equity).slice(0, 20); }
+function ownersBoard(mode) { const book = mode === 'live' ? db.live : db.owners; return Object.values(book).filter((d) => d.trades > 0).map(pubDesk).sort((a, b) => b.roi - a.roi).slice(0, 20); }
+
+// ---- LIVE: real USDC on Arc. Deposits are native value transfers to TREASURY, verified from the transaction; withdrawals queue for the treasury to pay.
+const hexToNum = (h, dec) => { if (!h || h === '0x') return 0; const bi = BigInt(h); const d = 10n ** BigInt(dec || 18); return Number(bi / d) + Number(bi % d) / Number(d); };
+async function rpc(method, params) { const r = await fetch(RPC, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) }).then((x) => x.json()); if (r.error) throw new Error(r.error.message); return r.result; }
+const TCHAIN = { ok: false, block: 0, treasuryUsdc: 0, lastRead: 0 };
+async function pollTreasury() { if (!TREASURY) return; try { TCHAIN.block = Number(BigInt(await rpc('eth_blockNumber', []))); TCHAIN.treasuryUsdc = hexToNum(await rpc('eth_getBalance', [TREASURY, 'latest']), 18); TCHAIN.ok = true; TCHAIN.lastRead = now(); } catch (e) { TCHAIN.ok = false; } }
+pollTreasury(); setInterval(pollTreasury, 30000);
+async function creditDeposit(w, txHash) {
+  if (!TREASURY) throw 'live deposits are not open yet';
+  if (!/^0x[a-fA-F0-9]{64}$/.test(txHash || '')) throw 'paste the transaction hash';
+  txHash = txHash.toLowerCase(); if (db.txs[txHash]) throw 'already credited';
+  const [tx, rc] = await Promise.all([rpc('eth_getTransactionByHash', [txHash]), rpc('eth_getTransactionReceipt', [txHash])]);
+  if (!tx) throw 'transaction not found'; if (!rc) throw 'pending — try again in a few seconds'; if (rc.status !== '0x1') throw 'transaction reverted';
+  if ((tx.from || '').toLowerCase() !== w) throw 'transaction is not from your wallet';
+  if ((tx.to || '').toLowerCase() !== TREASURY) throw 'transaction did not go to the treasury';
+  const amt = hexToNum(tx.value, 18); if (!(amt > 0)) throw 'no USDC value in this transaction';
+  if (amt < MIN_DEPOSIT) throw 'minimum deposit is ' + MIN_DEPOSIT + ' USDC';
+  const d = desk(w, 'live'); d.usdg = r2(d.usdg + amt); d.deposited = r2((d.deposited || 0) + amt);
+  db.txs[txHash] = { w, amt, block: Number(BigInt(rc.blockNumber)), ts: now() }; db.treasuryIn.usdc = r2(db.treasuryIn.usdc + amt); db.treasuryIn.n++; dirty();
+  return { amt, tx: txHash, block: db.txs[txHash].block };
+}
+function requestWithdraw(w, amount) {
+  const d = desk(w, 'live'); amount = r2(+amount); if (!(amount >= 1)) throw 'minimum withdrawal is 1 USDC'; if (d.usdg < amount) throw 'not enough free USDC on your live desk (close positions first)';
+  d.usdg = r2(d.usdg - amount); d.withdrawn = r2((d.withdrawn || 0) + amount);
+  const q = { id: 'w' + crypto.randomBytes(5).toString('hex'), wallet: w, amt: amount, status: 'queued', ts: now(), paidTx: null, paidAt: null }; db.queue.unshift(q); if (db.queue.length > 500) db.queue.pop(); dirty(); return q;
+}
 
 // ---------- projections ----------
 function pubPet(p) {
@@ -426,7 +457,7 @@ function pubPet(p) {
     positions: p.positions.map((pos) => ({ sym: pos.sym, side: pos.side, lev: pos.lev, entry: r6(pos.entry),
       pnlPct: MKT[pos.sym] && MKT[pos.sym].px ? r2((pos.side === 'long' ? MKT[pos.sym].px / pos.entry - 1 : 1 - MKT[pos.sym].px / pos.entry) * pos.lev * 100) : 0 })),
     equityHist: p.equityHist.slice(-120),
-    riders: Object.values(db.owners).filter((d) => d.rides.includes(p.id)).length,
+    riders: Object.values(db.owners).filter((d) => d.rides.includes(p.id)).length + Object.values(db.live).filter((d) => d.rides.includes(p.id)).length, liveRiders: Object.values(db.live).filter((d) => d.rides.includes(p.id)).length, liveBacking: r2(Object.values(db.live).filter((d) => d.rides.includes(p.id)).reduce((x, d) => x + deskEquity(d), 0)),
     careReady: Object.fromEntries(Object.keys(CARE).map((k) => [k, Math.max(0, ((p.care[k] || 0) + CARE[k].cd) - now())])) };
 }
 function trending() {
@@ -447,7 +478,7 @@ const server = http.createServer(async (req, res) => {
   const u = new URL(req.url, 'http://x');
   const p = u.pathname;
 
-  if (p === '/api/config') return json(res, 200, { token: TOKEN, mint: MINT, chainId: CHAIN.id, chain: CHAIN, species: SPECIES_KEYS.map((k) => ({ key: k, label: SPECIES[k].label, emoji: SPECIES[k].emoji, color: SPECIES[k].color, blurb: SPECIES[k].blurb, obey: SPECIES[k].obey })), markets: SYMS.length, maxPets: MAX_PETS, callWindowMin: CALL_WINDOW_MS / 60000 });
+  if (p === '/api/config') return json(res, 200, { token: TOKEN, mint: MINT, chainId: CHAIN.id, chain: CHAIN, live: !!TREASURY, treasury: TREASURY || null, minDeposit: MIN_DEPOSIT, species: SPECIES_KEYS.map((k) => ({ key: k, label: SPECIES[k].label, emoji: SPECIES[k].emoji, color: SPECIES[k].color, blurb: SPECIES[k].blurb, obey: SPECIES[k].obey })), markets: SYMS.length, maxPets: MAX_PETS, callWindowMin: CALL_WINDOW_MS / 60000 });
   if (p === '/api/feed') {
     const tag = (u.searchParams.get('tag') || '').toUpperCase();
     const who = u.searchParams.get('pet') || '';
@@ -467,17 +498,23 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, {
       callers: rows.filter((x) => x.calls.total >= 3).sort((a, b) => (b.hitRate || 0) - (a.hitRate || 0)),
       rich: rows.slice().sort((a, b) => (b.equity / Math.max(1, b.funded)) - (a.equity / Math.max(1, a.funded))),
-      owners: ownersBoard(), stats: db.stats });
+      owners: ownersBoard(), liveOwners: ownersBoard('live'), stats: db.stats });
   }
 
-  if (p === '/api/desk') { const w = (u.searchParams.get('wallet') || '').toLowerCase(); if (!isEvm(w)) return json(res, 200, { error: 'wallet' }); return json(res, 200, pubDesk(desk(w))); }
-  if (p === '/api/owners') return json(res, 200, { owners: ownersBoard() });
+  if (p === '/api/desk') { const w = (u.searchParams.get('wallet') || '').toLowerCase(); if (!isEvm(w)) return json(res, 200, { error: 'wallet' }); return json(res, 200, pubDesk(desk(w, u.searchParams.get('mode')))); }
+  if (p === '/api/owners') return json(res, 200, { owners: ownersBoard(u.searchParams.get('mode')) });
+  if (p === '/api/live') return json(res, 200, { open: !!TREASURY, treasury: TREASURY || null, minDeposit: MIN_DEPOSIT, chain: { ...CHAIN, ...TCHAIN }, deposited: db.treasuryIn.usdc, deposits: db.treasuryIn.n, queued: db.queue.filter((q) => q.status === 'queued').length, queuedUsd: r2(db.queue.filter((q) => q.status === 'queued').reduce((a, q) => a + q.amt, 0)), paid: db.queue.filter((q) => q.status === 'paid').length, liveDesks: Object.keys(db.live).length, liveTrades: db.stats.liveTrades || 0 });
+  if (p === '/api/deposit' && req.method === 'POST') { const d = await body(req); const w = (d.wallet || '').toLowerCase(); if (!isEvm(w)) return json(res, 400, { error: 'connect a wallet' }); try { const r = await creditDeposit(w, d.tx); return json(res, 200, { ok: true, ...r, desk: pubDesk(desk(w, 'live')) }); } catch (e) { return json(res, 200, { error: String(e.message || e) }); } }
+  if (p === '/api/withdraw' && req.method === 'POST') { const d = await body(req); const w = (d.wallet || '').toLowerCase(); if (!isEvm(w)) return json(res, 400, { error: 'connect a wallet' }); try { const q = requestWithdraw(w, d.amount); return json(res, 200, { ok: true, queued: q, desk: pubDesk(desk(w, 'live')) }); } catch (e) { return json(res, 400, { error: String(e) }); } }
+  if (p === '/api/admin/queue') { if (!ADMIN_KEY || u.searchParams.get('key') !== ADMIN_KEY) return json(res, 403, { error: 'no' }); return json(res, 200, { queue: db.queue, deposits: db.txs }); }
+  if (p === '/api/admin/paid' && req.method === 'POST') { const d = await body(req); if (!ADMIN_KEY || d.key !== ADMIN_KEY) return json(res, 403, { error: 'no' }); const q = db.queue.find((x) => x.id === d.id); if (!q) return json(res, 404, { error: 'no such request' }); q.status = 'paid'; q.paidTx = d.tx || null; q.paidAt = now(); dirty(); return json(res, 200, { ok: true, q }); }
+  if (p === '/api/dev/live' && process.env.DEV === '1' && req.method === 'POST') { const d = await body(req); const w = (d.wallet || '').toLowerCase(); const dk = desk(w, 'live'); dk.usdg = r2(dk.usdg + (+d.amount || 100)); dk.deposited = r2((dk.deposited || 0) + (+d.amount || 100)); dirty(); return json(res, 200, pubDesk(dk)); }
   if (p === '/api/trade/open' && req.method === 'POST') { const d = await body(req); const w = (d.wallet || '').toLowerCase(); if (!isEvm(w)) return json(res, 400, { error: 'connect a wallet' });
-    try { const q = deskOpen(w, String(d.sym || '').toUpperCase(), d.side, d.margin, d.lev); return json(res, 200, { opened: q, desk: pubDesk(desk(w)) }); } catch (e) { return json(res, 400, { error: String(e) }); } }
-  if (p === '/api/trade/close' && req.method === 'POST') { const d = await body(req); const w = (d.wallet || '').toLowerCase(); if (!isEvm(w)) return json(res, 400, { error: 'connect a wallet' }); const dk = desk(w); const i = +d.i;
+    try { const q = deskOpen(w, String(d.sym || '').toUpperCase(), d.side, d.margin, d.lev, d.mode); return json(res, 200, { opened: q, desk: pubDesk(desk(w, d.mode)) }); } catch (e) { return json(res, 400, { error: String(e) }); } }
+  if (p === '/api/trade/close' && req.method === 'POST') { const d = await body(req); const w = (d.wallet || '').toLowerCase(); if (!isEvm(w)) return json(res, 400, { error: 'connect a wallet' }); const dk = desk(w, d.mode); const i = +d.i;
     if (!(i >= 0 && i < dk.positions.length)) return json(res, 400, { error: 'no such position' }); try { const c = deskClose(dk, i, 'manual'); return json(res, 200, { closed: c, desk: pubDesk(dk) }); } catch (e) { return json(res, 400, { error: String(e) }); } }
   if (p === '/api/ride' && req.method === 'POST') { const d = await body(req); const w = (d.wallet || '').toLowerCase(); if (!isEvm(w)) return json(res, 400, { error: 'connect a wallet' }); const pet = db.pets[d.petId]; if (!pet) return json(res, 400, { error: 'no such horse' });
-    const dk = desk(w); const k = dk.rides.indexOf(pet.id); if (k >= 0) dk.rides.splice(k, 1); else { if (dk.rides.length >= 3) return json(res, 400, { error: 'you can ride at most 3 horses' }); dk.rides.push(pet.id); mkPost(pet.id, 'a new owner is riding along on my book. every entry I make, they mirror at half size. no pressure. ' + SPECIES[pet.species].emoji); }
+    const dk = desk(w, d.mode); const k = dk.rides.indexOf(pet.id); if (k >= 0) dk.rides.splice(k, 1); else { if (dk.rides.length >= 3) return json(res, 400, { error: 'you can ride at most 3 horses' }); dk.rides.push(pet.id); mkPost(pet.id, 'a new owner is riding along on my book. every entry I make, they mirror at half size. no pressure. ' + SPECIES[pet.species].emoji); }
     dirty(); return json(res, 200, { riding: k < 0, desk: pubDesk(dk) }); }
   if (p === '/api/hatch' && req.method === 'POST') {
     const d = await body(req);
@@ -502,7 +539,7 @@ const server = http.createServer(async (req, res) => {
     if (!pet || pet.owner !== w) return json(res, 400, { error: 'not your pet' });
     if (pet.funded + FUND_STEP > MAX_USD_FUNDED) return json(res, 400, { error: 'funding cap reached ($' + MAX_USD_FUNDED + ')' });
     pet.usd = r2(pet.usd + FUND_STEP); pet.funded += FUND_STEP;
-    mkPost(pet.id, 'the owner just topped up my bag with $' + FUND_STEP + ' of paper capital. responsibility level: rising. ' + SPECIES[pet.species].emoji);
+    mkPost(pet.id, 'the owner just topped up my bag with $' + FUND_STEP + ' of book capital. responsibility level: rising. ' + SPECIES[pet.species].emoji);
     dirty();
     return json(res, 200, { pet: pubPet(pet) });
   }

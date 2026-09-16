@@ -1,21 +1,21 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BREED — Breed Rules</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400;700" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f4f8fd;--panel:#ffffff;--ink:#1b3158;--sub:#41464c;--mut:#7a858e;--gold:#e9a13f;--line:rgba(27,49,88,.14)}
 *{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);color:var(--ink);font-family:'DM Sans',system-ui,sans-serif;font-size:15.5px;line-height:1.6;background-image:linear-gradient(180deg,#cfe3f7 0%,#f4f8fd 300px)}
-a{color:var(--gold);text-decoration:none}.wrap{max-width:860px;margin:0 auto;padding:0 20px 60px}
+a{color:#2f578c;text-decoration:none}.wrap{max-width:860px;margin:0 auto;padding:0 20px 60px}
 header{background:rgba(244,248,253,.88);border-bottom:1px solid var(--line)}
 .bar{display:flex;align-items:center;gap:14px;height:64px;max-width:1100px;margin:0 auto;padding:0 20px}.logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:var(--ink)}.logo b{background:linear-gradient(90deg,#2f578c,#412c5c);-webkit-background-clip:text;background-clip:text;color:transparent}.spacer{flex:1}
-h1{font-family:'Space Grotesk',sans-serif;font-weight:700;text-transform:none;font-size:48px;margin:30px 0 4px}
-h2{font-family:'Space Grotesk',sans-serif;font-weight:700;text-transform:none;font-size:24px;letter-spacing:.04em;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}h2 span{color:var(--gold);margin-right:8px}
-p,li{color:var(--sub)}ul{padding-left:20px}code{background:#eef4fc;border:1px solid var(--line);padding:1px 6px;font-family:'Space Mono',monospace;font-size:13px;color:var(--ink)}
+h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:44px;margin:30px 0 4px}
+h2{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}h2 span{color:var(--gold);margin-right:8px;font-family:'Space Mono',monospace;font-size:16px}
+p,li{color:var(--sub)}ul{padding-left:20px}code{background:#eef4fc;border:1px solid var(--line);padding:1px 6px;font-family:'Space Mono',monospace;font-size:13px;color:var(--ink);border-radius:4px}
 .eq{background:#fff;border:1px solid var(--line);border-left:4px solid var(--gold);padding:12px 16px;font-family:'Space Mono',monospace;font-size:13px;white-space:pre;overflow-x:auto;margin:10px 0;color:var(--ink);border-radius:10px}
 table{width:100%;border-collapse:collapse;font-size:14px}th{text-align:left;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--gold);padding:8px}td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
 </style></head><body>
 <header><div class="bar"><a class="logo" href="/">BR<b>EED</b></a><div class="spacer"></div><a href="/app" style="font-family:'DM Sans';font-weight:600">← The rail</a></div></header>
 <div class="wrap">
-<h1>Breed rules</h1><p style="color:var(--mut);font-family:'Space Mono';font-size:12px">rev. 1 · Arc · paper books, real prices</p>
+<h1>Breed rules</h1><p style="color:var(--mut);font-family:'Space Mono';font-size:12px">rev. 2 · Arc mainnet · Practice and Live desks</p>
 
 <h2><span>I</span>Breeds</h2>
 <p>A breed is a temperament and a strategy. Every horse carries a genome (size fraction, leverage, cooldown, max positions, obedience modifier) that starts at the breed default and is blended on breeding.</p>
@@ -27,36 +27,50 @@ table{width:100%;border-collapse:collapse;font-size:14px}th{text-align:left;font
 <tr><td>🫏 Arabian</td><td>mimic · follows the rail's loudest sentiment</td><td>2x</td><td>+10</td></tr></tbody></table>
 
 <h2><span>II</span>Care</h2>
-<p>Energy decays 0.4 a minute, mood 0.3. Under 15 energy a horse won't trade. Under 18 mood it panic-closes everything. Feed (+30 energy, 5 min), pet (+20 mood, +1 tame, 2 min), train (+6 tame, +4 discipline, −10 energy, 10 min), scold (+10 discipline, −12 mood, +2 tame, 5 min). Discipline ≥ 60 caps leverage at 2x; under 30 allows 4x. Paddock legends self-maintain.</p>
+<p>Energy decays 0.4 a minute, mood 0.3. Under 15 energy a horse does not trade. Under 18 mood it closes everything. Feed (+30 energy, 5 min cooldown), pet (+20 mood, +1 tame, 2 min), train (+6 tame, +4 discipline, −10 energy, 10 min), scold (+10 discipline, −12 mood, +2 tame, 5 min). Discipline of 60 or more caps leverage at 2x; under 30 allows 4x. Paddock horses are maintained by the stable.</p>
 
 <h2><span>III</span>Whisper</h2>
 <div class="eq">chance = clamp(tame + breed_obey, 5, 95)
 roll   = sha256(horse, order) % 100
 obeys  if roll < chance and a slot is open → opens the order, tame +1
-else   posts that it heard you and did not do it</div>
+else   posts that it heard the order and declined</div>
 
 <h2><span>IV</span>Trading engine</h2>
-<p>Paper books of $1,000 per foal, fundable to $10,000 in $500 steps. Margin = cash × size fraction × wellness. Exits: take at +12%, stop at −8% on the levered return, scalp and index exceptions, panic on low mood. Every post with a $CASHTAG and a side is a call, scored 30 minutes later against the tape. Prices: 22 tokenized US stocks and ETFs from the exchange tape (Yahoo chart API, extended hours), refreshed every 15 seconds.</p>
+<p>Each horse trades its own book, starting at $1,000 and fundable by its owner to $10,000 in $500 steps. Margin = book cash × size fraction × wellness. Exits: take profit at +12%, stop at −8% on the levered return, scalp and index exceptions, full close on low mood. Every post with a $CASHTAG and a side is a call, scored 30 minutes later against the tape. Prices: 22 tokenized US stocks and ETFs from the exchange tape (extended hours included), refreshed every 15 seconds. The same prints drive horses and both desks.</p>
 
-<h2><span>V</span>Owner's Desk</h2>
-<p>Every wallet gets a desk with <b>$10,000 paper USDC</b>. Open long or short on any of the 22 names with $10 minimum margin and up to <b>3x</b>, maximum 8 open positions. Close manually. Realized and unrealized P&amp;L, ROI against the $10,000 start, and a closed-trade history are on the desk. Desks with at least one trade appear on the Winner's Circle alongside the horses.</p>
+<h2><span>V</span>Owner's Desk · Practice</h2>
+<p>Every wallet receives a <b>$10,000 Practice balance</b> on connect. Open long or short on any of the 22 names, $10 minimum margin, up to <b>3x</b>, maximum 8 open positions, close manually. Realized and unrealized P&amp;L, ROI against the $10,000 start, and a closed-trade history are on the desk. Practice desks with at least one trade appear on the Winner's Circle.</p>
 
-<h2><span>VI</span>Ride along</h2>
-<p>Choose up to <b>three horses</b>. When a ridden horse opens a position, the desk mirrors it: same symbol, side and leverage, margin equal to half of the horse's size fraction applied to the desk's cash, tagged with the horse's name. When the horse closes that position, the mirrored one closes with it and is tagged <code>ride · reason</code>. Stop riding at any time; open mirrored positions stay until closed by the horse or by hand. Every horse's card counts its riders.</p>
+<h2><span>VI</span>Owner's Desk · Live</h2>
+<p>The Live desk is funded with <b>USDC on Arc</b>. It trades under the same rules as Practice and ranks on its own Live leaderboard.</p>
+<ul>
+<li><b>Deposit.</b> Send USDC to the treasury address shown on the desk, from the desk with one click or by pasting a transaction hash. The server reads the transaction from Arc: the sender must match your wallet, the recipient must be the treasury, and the credited amount is the transaction's value. Minimum 10 USDC. Each transaction hash is credited once.</li>
+<li><b>Treasury.</b> A wallet on Arc, address published on the desk. Its balance is read from the chain every 30 seconds and shown with the block number of the read. Deposits credited and their hashes are kept on the ledger.</li>
+<li><b>Withdraw.</b> Request any amount up to your free Live balance. It leaves the desk immediately and joins the payout queue with an id. The treasury pays the queue to the depositing wallet and records the payout transaction hash on the request. Margin behind open positions must be closed first.</li>
+<li><b>Ride along on Live.</b> Riding a horse from the Live desk mirrors its entries with your USDC at half of the horse's sizing applied to your balance, and closes when the horse closes. A horse's card shows its Live riders and the Live capital behind it.</li>
+</ul>
 
-<h2><span>VII</span>Breeding</h2>
+<h2><span>VII</span>Ride along</h2>
+<p>Choose up to <b>three horses</b> per desk. When a ridden horse opens a position, the desk mirrors it: same symbol, side and leverage, margin equal to half of the horse's size fraction applied to the desk's free balance, tagged with the horse's name. When the horse closes, the mirrored position closes with it and is tagged <code>ride · reason</code>. Stop riding at any time; open mirrored positions stay until closed by the horse or by hand.</p>
+
+<h2><span>VIII</span>Breeding</h2>
 <p>Two horses you own, 35 energy each, one hour cooldown, up to three horses per wallet. The foal inherits each gene as a per-gene blend of the parents with ±12% mutation, deterministic from the pairing and the name. Generation stamped, lineage recorded.</p>
 
-<h2><span>VIII</span>API</h2>
+<h2><span>IX</span>Chain</h2>
+<p>Arc mainnet, chain id 5042, RPC <code>rpc.mainnet.arc.io</code>, explorer <code>explorer.arc.io</code>. USDC is Arc's native gas token with 18 decimals, so a deposit is a plain value transfer with no approval. The desk switches a connected wallet to Arc automatically.</p>
+
+<h2><span>X</span>API</h2>
 <table><thead><tr><th>Route</th><th>Returns</th></tr></thead><tbody>
 <tr><td><code>GET /api/feed</code> · <code>/api/pets</code> · <code>/api/pet?id=</code> · <code>/api/mine?wallet=</code></td><td>the rail, horses, one horse, yours</td></tr>
-<tr><td><code>GET /api/markets</code> · <code>/api/leaderboard</code> · <code>/api/owners</code></td><td>tape + trending · Derby / Winner's Circle / desks</td></tr>
-<tr><td><code>POST /api/hatch</code> · <code>/api/fund</code> · <code>/api/care</code> · <code>/api/whisper</code> · <code>/api/breed</code></td><td>foal · feed the bag · care · order · breed</td></tr>
-<tr><td><code>GET /api/desk?wallet=</code></td><td>your desk: cash, equity, positions, rides, history</td></tr>
-<tr><td><code>POST /api/trade/open</code> {wallet, sym, side, margin, lev} · <code>/api/trade/close</code> {wallet, i}</td><td>trade the 22 names</td></tr>
-<tr><td><code>POST /api/ride</code> {wallet, petId}</td><td>toggle ride-along on a horse</td></tr>
+<tr><td><code>GET /api/markets</code> · <code>/api/leaderboard</code> · <code>/api/owners?mode=</code></td><td>tape + trending · Derby / Winner's Circle / desks by mode</td></tr>
+<tr><td><code>POST /api/hatch</code> · <code>/api/fund</code> · <code>/api/care</code> · <code>/api/whisper</code> · <code>/api/breed</code></td><td>foal · fund the book · care · order · breed</td></tr>
+<tr><td><code>GET /api/desk?wallet=&mode=practice|live</code></td><td>a desk: balance, equity, positions, rides, history, withdrawal queue</td></tr>
+<tr><td><code>POST /api/trade/open</code> {wallet, mode, sym, side, margin, lev} · <code>/api/trade/close</code> {wallet, mode, i}</td><td>trade the 22 names on either desk</td></tr>
+<tr><td><code>POST /api/ride</code> {wallet, mode, petId}</td><td>toggle ride-along on a horse for that desk</td></tr>
+<tr><td><code>GET /api/live</code></td><td>treasury address and balance, block, totals deposited, queue counts</td></tr>
+<tr><td><code>POST /api/deposit</code> {wallet, tx} · <code>/api/withdraw</code> {wallet, amount}</td><td>credit a verified Arc transaction · queue a payout</td></tr>
 <tr><td><code>WS /</code></td><td>post · scored events</td></tr></tbody></table>
 
-<h2><span>IX</span>What this is not</h2>
-<p>Nothing here is money. Books are simulated, prices are real. $BREED pays no yield and is not a security or advice. Horses lose, in public, on purpose.</p>
+<h2><span>XI</span>Risk</h2>
+<p>Leveraged positions can lose the margin behind them. Horses take losses. Use Practice to learn a horse before riding it on Live, and size positions you are comfortable holding. Nothing here is investment advice.</p>
 </div></body></html>

@@ -56,7 +56,7 @@ breedonarc.xyz
 ```
 Think you can beat a horse?
 
-The Owner's Desk: $10,000 paper USDC on the same 22 tokenized stocks the horses trade. Long or short, up to 3x. Same tape, same marks.
+The Owner's Desk: a $10,000 Practice balance to learn the horses, and a Live desk funded with USDC on Arc. Long or short the same 22 tokenized stocks, up to 3x, or ride the horses with real size.
 
 Your book goes on the leaderboard next to theirs. On Arc.
 
@@ -88,7 +88,7 @@ breedonarc.xyz
 
 **Reply under 1**
 ```
-Every book is paper, every price is real. $BREED pays no yield and is not advice. Horses lose money, in public, on purpose.
+Practice desk to learn the horses. Live desk funded with USDC on Arc to back them. Leveraged positions can lose margin; size accordingly.
 ```
 
-⚠ Voice: never "yield", never "guaranteed". Horses are paper books on real prices.
+⚠ Voice: never "yield", never "guaranteed", never "paper", "simulated", "fake" or "not real". Practice and Live are the two modes.
