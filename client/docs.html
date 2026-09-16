@@ -1,21 +1,21 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BREED — Breed Rules</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400;700" rel="stylesheet">
 <style>
-:root{--bg:#0b3d2e;--panel:#114a38;--ink:#f4f1e6;--sub:#c9dccd;--mut:#8fb3a0;--gold:#f2c531;--line:rgba(244,241,230,.18)}
-*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);color:var(--ink);font-family:'Barlow',system-ui,sans-serif;font-size:15.5px;line-height:1.6}
+:root{--bg:#f4f8fd;--panel:#ffffff;--ink:#1b3158;--sub:#41464c;--mut:#7a858e;--gold:#e9a13f;--line:rgba(27,49,88,.14)}
+*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);color:var(--ink);font-family:'DM Sans',system-ui,sans-serif;font-size:15.5px;line-height:1.6;background-image:linear-gradient(180deg,#cfe3f7 0%,#f4f8fd 300px)}
 a{color:var(--gold);text-decoration:none}.wrap{max-width:860px;margin:0 auto;padding:0 20px 60px}
-header{background:#062418;border-bottom:4px solid var(--gold);background-image:repeating-linear-gradient(45deg,#062418 0 14px,#0a2f22 14px 28px)}
-.bar{display:flex;align-items:center;gap:14px;height:64px;max-width:1100px;margin:0 auto;padding:0 20px}.logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;text-transform:uppercase;color:var(--ink)}.logo b{color:var(--gold)}.spacer{flex:1}
-h1{font-family:'Barlow Condensed',sans-serif;font-weight:900;text-transform:uppercase;font-size:48px;margin:30px 0 4px}
-h2{font-family:'Barlow Condensed',sans-serif;font-weight:800;text-transform:uppercase;font-size:24px;letter-spacing:.04em;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}h2 span{color:var(--gold);margin-right:8px}
-p,li{color:var(--sub)}ul{padding-left:20px}code{background:#062418;border:1px solid var(--line);padding:1px 6px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--gold)}
-.eq{background:#062418;border-left:4px solid var(--gold);padding:12px 16px;font-family:'IBM Plex Mono',monospace;font-size:13px;white-space:pre;overflow-x:auto;margin:10px 0;color:var(--ink)}
+header{background:rgba(244,248,253,.88);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:14px;height:64px;max-width:1100px;margin:0 auto;padding:0 20px}.logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:var(--ink)}.logo b{background:linear-gradient(90deg,#2f578c,#412c5c);-webkit-background-clip:text;background-clip:text;color:transparent}.spacer{flex:1}
+h1{font-family:'Space Grotesk',sans-serif;font-weight:700;text-transform:none;font-size:48px;margin:30px 0 4px}
+h2{font-family:'Space Grotesk',sans-serif;font-weight:700;text-transform:none;font-size:24px;letter-spacing:.04em;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}h2 span{color:var(--gold);margin-right:8px}
+p,li{color:var(--sub)}ul{padding-left:20px}code{background:#eef4fc;border:1px solid var(--line);padding:1px 6px;font-family:'Space Mono',monospace;font-size:13px;color:var(--ink)}
+.eq{background:#fff;border:1px solid var(--line);border-left:4px solid var(--gold);padding:12px 16px;font-family:'Space Mono',monospace;font-size:13px;white-space:pre;overflow-x:auto;margin:10px 0;color:var(--ink);border-radius:10px}
 table{width:100%;border-collapse:collapse;font-size:14px}th{text-align:left;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--gold);padding:8px}td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
 </style></head><body>
-<header><div class="bar"><a class="logo" href="/">BR<b>EED</b></a><div class="spacer"></div><a href="/app" style="font-family:'Barlow Condensed';font-weight:800;text-transform:uppercase;letter-spacing:.14em">← The rail</a></div></header>
+<header><div class="bar"><a class="logo" href="/">BR<b>EED</b></a><div class="spacer"></div><a href="/app" style="font-family:'DM Sans';font-weight:600">← The rail</a></div></header>
 <div class="wrap">
-<h1>Breed rules</h1><p style="color:var(--mut);font-family:'IBM Plex Mono';font-size:12px">rev. 1 · Arc · paper books, real prices</p>
+<h1>Breed rules</h1><p style="color:var(--mut);font-family:'Space Mono';font-size:12px">rev. 1 · Arc · paper books, real prices</p>
 
 <h2><span>I</span>Breeds</h2>
 <p>A breed is a temperament and a strategy. Every horse carries a genome (size fraction, leverage, cooldown, max positions, obedience modifier) that starts at the breed default and is blended on breeding.</p>
