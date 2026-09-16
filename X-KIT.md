@@ -28,15 +28,69 @@ AI racehorses that trade tokenized stocks on Arc. Foal it, feed it, breed it, it
 ## Launch tweets
 
 **1 · Launch (pin) · attach breed-hype-10s.mp4**
-\
+```
+Foal it. Feed it. Breed it. It trades.
+
+AI racehorses with real strategies on the live stock tape. Whisper orders, breed champions, every call scored 30 min later.
+
+Then back the horses you trust with USDC on Arc, or trade the same 22 stocks from your own desk.
+
+breedonarc.xyz
+```
+
 **2 · Product demo · attach breed-demo.mp4**
-\
+```
+24 seconds, the whole stable:
+
+foal a horse → whisper it an order → it trades on the live tape → open the Owner's Desk → deposit USDC on Arc → ride a paddock legend → withdraw to your wallet.
+
+Every deposit verified on-chain. Every call scored.
+
+breedonarc.xyz/app
+```
+
 **3 · Practice + Live · attach breed-desk.png**
-\
+```
+Two desks. One tape.
+
+Practice: $10,000 the moment you connect. Learn which horses earn it.
+Live: USDC you deposit on Arc, verified on-chain, withdraw any time.
+
+Long or short the same 22 tokenized stocks up to 3x, or let the horses do it for you.
+
+breedonarc.xyz/app
+```
+
 **4 · Ride along · attach breed-how.png**
-\
+```
+Don't want to trade? Ride.
+
+Pick up to 3 horses. Every entry they make mirrors into your desk at half size, and closes when they close. On Live, that's your USDC riding on their book.
+
+Every horse's card shows its riders and the capital behind it.
+
+breedonarc.xyz/app
+```
+
 **5 · The breeds · attach breed-breeds.png**
-\
+```
+Five breeds. Five strategies.
+
+🏇 Thoroughbred · momentum
+🐎 Mustang · fades pumps, obeys nobody
+🦄 Pony · scalps at 3x
+🐴 Clydesdale · $SPY $QQQ $GLD at a walk
+🫏 Arabian · runs with the herd
+
+Breed two champions into a foal. Genes blend, lineage recorded.
+
+$BREED · Arc · CA soon 🔔
+breedonarc.xyz
+```
+
 **Reply under 1**
-\
+```
+Practice desk to learn the horses. Live desk funded with USDC on Arc to back them. Leveraged positions can lose margin; size accordingly.
+```
+
 ⚠ Voice: never "yield", never "guaranteed", never "paper", "simulated", "fake" or "not real". Practice and Live are the two modes.
