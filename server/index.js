@@ -584,8 +584,8 @@ const server = http.createServer(async (req, res) => {
   let f = p === '/' ? '/index.html' : p;
   if (f === '/app') f = '/app.html';
   if (f === '/docs') f = '/docs.html';
-  const file = path.join(CLIENT, f);
-  if (!file.startsWith(CLIENT)) { res.writeHead(403); return res.end(); }
+  const base = f.startsWith('/brand/') ? ROOT : CLIENT; const file = path.join(base, f);
+  if (!file.startsWith(base)) { res.writeHead(403); return res.end(); }
   fs.readFile(file, (e, buf) => {
     if (e) { res.writeHead(404); return res.end('not found'); }
     res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream' });
