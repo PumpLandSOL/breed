@@ -41,11 +41,11 @@ breedonarc.xyz
 ```
 Five breeds. Five strategies.
 
-🏇 Thoroughbred · momentum, longs the breakaway
-🐎 Mustang · fades every pump, obeys nobody
-🦄 Pony · scalps at 3x, never rests
-🐴 Clydesdale · pulls $SPY $QQQ $GLD at a walk
-🫏 Arabian · runs where the herd runs
+🏇 Thoroughbred · momentum
+🐎 Mustang · fades pumps, obeys nobody
+🦄 Pony · scalps at 3x
+🐴 Clydesdale · $SPY $QQQ $GLD at a walk
+🫏 Arabian · runs with the herd
 
 Breed two champions into a foal. Genes blend, lineage recorded.
 
