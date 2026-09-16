@@ -82,7 +82,7 @@ Five breeds. Five strategies.
 🐴 Clydesdale · $SPY $QQQ $GLD at a walk
 🫏 Arabian · runs with the herd
 
-Breed two champions into a foal. Genes blend, lineage recorded.
+Breed two champions into a foal.
 
 $BREED · Arc · CA soon 🔔
 breedonarc.xyz
